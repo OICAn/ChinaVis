@@ -5,6 +5,7 @@
 	<title>ChinaVis 2019</title>
 	<link rel="shortcut icon" href="bitbug_favicon.ico" type="image/x-icon" />
 	<script type="text/javascript" src="d3.v4.js"></script>
+	<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
 	<style>
 			*{
 				padding: 0;
@@ -30,9 +31,43 @@
 				position: absolute;
 				top:500px;
 			}
+			#timeText {
+				width: 100px;
+				position: absolute;
+				top: 50px;
+				left: 50%;
+				margin-left:-50px;
+				text-align: center;
+				font-weight: bold;
+				font-size: 50px;
+			}
+			#container{
+				margin: 15px auto;
+				background: #dcdcdc;
+				width: 500px;
+				height: 20px;
+				border-radius: 3px;
+			}
+			#control{
+				display: inline-block;
+				width: 10px;
+				height: 28px;
+				background: rgb(128,128,128);
+				position: relative;
+				border-radius: 2px;
+				left: 0;
+				top: 0;
+				margin-top:-4px; 
+			}
 		</style>
 </head>
 <body>
+	<div id="timeText">
+		0:0:0
+	</div>
+	<div id="container">
+		<div id="control"></div>
+	</div>
 	<svg class="container"></svg>
 	<script type="text/javascript">
 		var width = 800,
@@ -48,10 +83,23 @@
 			p= 40,//内边距
 			xScale= d3.scaleLinear().domain([0, 30]).range([p, width - p]), //(2) 定义x和y比例尺
 			gridSize = xScale(1)-xScale(0),
-			peopleSize = 6,
+			peopleSize = 5,
 			floor1 = [],//第一层的所有人
 			floor2 = [];//第二层的所有人
-		var	grids1, grids2;
+		var	grids1, grids2, bfb, time_max=86400, now_time, rScale1, rScale2;
+		var son = $("#control");
+		var parent = $("#container");
+
+		var grid_SumOfPeople_floor1 = new Array();//存整个楼每个点人数的二维数组，初始化为0
+		var grid_SumOfPeople_floor2 = new Array();
+		for(var i = 0; i<17; i++){//初始化0
+			grid_SumOfPeople_floor1[i] = new Array();
+			grid_SumOfPeople_floor2[i] = new Array();
+			for(var j = 0; j<31; j++){
+				grid_SumOfPeople_floor1[i][j] = 0;
+				grid_SumOfPeople_floor2[i][j] = 0;
+			}
+		}
 
 		//days数据的转换函数
 		var rowConventerDay = function (d) {
@@ -66,20 +114,36 @@
 		}
 		svg = d3.select("svg");
 
+		//*******
+		//main
+		//*******
 		d3.csv("day1.csv", rowConventerDay, function (dataday) {
 			day=dataday;
-			var time = 48000;
+			var time = 28000;
 			getTimeIn(day, time);
 			for (var i = 0; i < people.length; i++) {
-				if(people[i].floor==1)
+				var X = people[i].x;
+				var Y = people[i].y;
+				if(people[i].floor==1){
 					floor1.push(people[i]);
-				else
+					grid_SumOfPeople_floor1[X][Y]++;//二维数组对应++
+				}
+				else{
 					floor2.push(people[i]);
+					grid_SumOfPeople_floor2[X][Y]++;
+				}
 			}
+			rScale1 = d3.scaleLinear()
+						.domain([leastOfFour(grid_SumOfPeople_floor1), largestOfFour(grid_SumOfPeople_floor1)])
+						.range([3, (gridSize-3)/2]);
+			rScale2 = d3.scaleLinear()
+						.domain([leastOfFour(grid_SumOfPeople_floor2), largestOfFour(grid_SumOfPeople_floor2)])
+						.range([3, (gridSize-3)/2]);
 			drawGrids(1);
-			draws(floor1);
 			drawGrids(2);
+			draws(floor1);
 			draws(floor2);
+			drag(son, parent);
 		});
 
 		//整个读取的结构应该是d3.csv(传感器),在这之中根据需要d3.csv(days)
@@ -183,49 +247,115 @@
 			}	
 		}
 		function findX(x,floor){
-			return xScale(x)+gridSize/2-peopleSize/2;
+			return xScale(x)+gridSize/2;
 		}
 		function findY(y,floor){
 			if(floor == 1){
-				return xScale(y)+gridSize/2-peopleSize/2;
+				return xScale(y)+gridSize/2;
 			}
 			else{
-				return xScale(16)+xScale(y)+gridSize/2-peopleSize/2;
+				return xScale(16)+xScale(y)+gridSize/2;
 			}
 		} 	
 		function draws(floor) {
-			if(floor[1].floor==1)
+			if(floor.length>0)
 			{
-				grids1.selectAll("rect")
-				.data(floor)
-				.enter()
-				.append("rect")
-				.attr("x",function (d) {
-					return findX(d.y,1);;
-				})
-    			.attr("y",function (d) {
-    				return findY(d.x,1);;
-    			})		
-    			.attr("height",peopleSize)
-    			.attr("width",peopleSize)
-    			.attr("class", "people");
+				if(floor[0].floor==1)
+				{
+					grids1.selectAll("circle")
+					.data(floor)
+					.enter()
+					.append("circle")
+					.attr("cx",function (d) {
+						return findX(d.y,1);;
+					})
+	    			.attr("cy",function (d) {
+	    				return findY(d.x,1);;
+	    			})
+	    			.attr("r",function (d) {
+	    				return rScale1(grid_SumOfPeople_floor1[d.x][d.y]);
+	    			})
+	    			.attr("class", "people");
+				}
+				else
+				{
+					//同上
+					grids2.selectAll("circle")
+					.data(floor)
+					.enter()
+					.append("circle")
+					.attr("cx",function (d) {
+						return findX(d.y,2);
+					})
+	    			.attr("cy",function (d) {
+	    				return findY(d.x,2);
+	    			})		
+	    			.attr("r",function (d) {
+	    				return rScale2(grid_SumOfPeople_floor2[d.x][d.y]);
+	    			})
+	    			.attr("class", "people");
+				}
 			}
-			else
-			{
-				grids2.selectAll("rect")
-				.data(floor)
-				.enter()
-				.append("rect")
-				.attr("x",function (d) {
-					return findX(d.y,2);
-				})
-    			.attr("y",function (d) {
-    				return findY(d.x,2);
-    			})		
-    			.attr("height",peopleSize)
-    			.attr("width",peopleSize)
-    			.attr("class", "people");
-			}
+			
+		}
+		function timeFormat(time) {
+			var hour = parseInt(time/3600);
+			var minute = parseInt((time%3600)/60);
+			var second = (time%3600)%60;
+			return hour+":"+minute+":"+second;
+		}
+		//阿春修改
+		function drag(obj1,obj3) {//obj1，obj3是jQuery对象。obj1是子元素的jQuery对象，obj3是父元素的jQuery对象。
+		    var x;
+		    var y;
+		    var gapX;
+		    var gapY;
+		    obj1.mousedown(start);
+		    function start(event) {
+		        if (event.button == 0) {//判断是否点击鼠标左键
+		            gapX = event.clientX - obj1.offset().left + obj3.offset().left;//这是计算在减去鼠标相对于子元素的偏移量后，父元素相对于屏幕的横向距离。
+		            gapY = event.clientY - obj1.offset().top + obj3.offset().top;//与gapX同理
+		            //movemove事件必须绑定到$(document)上，鼠标移动是在整个屏幕上的
+		            $(document).mousemove(move);
+		            //此处的$(document)可以改为obj
+		            $(document).mouseup(stop);
+		        }
+		    }
+		    function move(event) {
+		    	bfb = parseFloat(((obj1.offset().left-obj3.offset().left)/(obj3[0].offsetWidth - obj1[0].offsetWidth)).toFixed(2));
+		        x = event.clientX - gapX;//用鼠标相对于屏幕的横向距离减去父元素相对于屏幕的横向距离
+				if(x < 0) {//限制obj1移出obj3左端
+				        x = 0;
+				 }
+				 //限制obj1移出obj3的右端
+				else if(x > (obj3[0].offsetWidth - obj1[0].offsetWidth)) {
+				    x = obj3[0].offsetWidth - obj1[0].offsetWidth;
+				}
+				
+				obj1.css({
+				    "left": x + "px"
+				});
+				now_time = bfb*time_max;
+				d3.select("#timeText")
+					.text(function () {
+						return timeFormat(now_time);
+					});
+		    }
+		    function stop(){
+		        //解绑定，这一步很必要，前面有解释
+		        $(document).unbind("mousemove", move);
+		        $(document).unbind("mouseup", stop);
+		    }
+		}
+		function largestOfFour (arr) {
+			return d3.max(arr.map(Function.apply.bind(Math.max, null)), function (d) {
+				return d;
+			});
+		}
+		function leastOfFour (arr) {
+			return d3.min(arr.map(Function.apply.bind(Math.min, null)), function (d) {
+				return d;
+			});
 		}
 	</script>
 </body>
