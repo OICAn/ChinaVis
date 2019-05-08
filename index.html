@@ -1,1 +1,166 @@
 <!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>ChinaVis 2019</title>
+	<link rel="shortcut icon" href="bitbug_favicon.ico" type="image/x-icon" />
+	<script type="text/javascript" src="d3.v4.js"></script>
+	<style>
+			*{
+				padding: 0;
+				margin: 0;
+			}
+			.container{
+				width: 800px;
+				height: 600px;
+				position: absolute;
+				left: 50%;
+				top: 50%;
+				margin-left: -400px;
+				margin-top: -300px;
+				
+			}
+			.grid,.grid2{
+				stroke: #222;
+			}
+			.people{
+				fill:red;
+			}
+		</style>
+</head>
+<body>
+	<svg class="container"></svg>
+	<script type="text/javascript">
+		var width = 800,
+			height = 600,
+			padding = 50,
+			svg,
+			day,//存储读取到的day的数据
+			people = [],//存储对应时间节点时最新的各个人员的位置
+			index = [],//便于快速查找数据
+			curr = 0,//便于快速查找数据
+			tmpData = d3.range(31),
+			tmpData2 = d3.range(17)
+			p= 40,//内边距
+			xScale= d3.scaleLinear().domain([0, 30]).range([p, width - p]), //(2) 定义x和y比例尺
+			gridSize = xScale(1)-xScale(0),
+			peopleSize = 6,
+			floor1 = [],//第一层的所有人
+			floor2 = [];//第二层的所有人
+
+		//days数据的转换函数
+		var rowConventerDay = function (d) {
+			return {
+				id: parseInt(d.id),
+				sid: parseInt(d.sid),
+				time: parseInt(d.time),
+				x: parseInt(d.x),
+				y: parseInt(d.y),
+				floor: parseInt(d.floor)
+			};
+		}
+		svg = d3.select("svg");
+
+		d3.csv("day1.csv", rowConventerDay, function (dataday) {
+			day=dataday;
+			drawGrids();
+			var time = 48000;
+			getTimeIn(day, time);
+			for (var i = 0; i < people.length; i++) {
+				if(people[i].floor==1)
+					floor1.push(people[i]);
+				else
+					floor2.push(people[i]);
+			}
+			draws();
+		});
+
+		//整个读取的结构应该是d3.csv(传感器),在这之中根据需要d3.csv(days)
+		//参数1是day的数据，二是当前的时间
+		//时间递增时的函数，可以动态、快速确定结果
+		function getTimeIn(day, time) {
+			for (; curr < day.length; curr++) {
+				if(day[curr].time<time)
+				{
+					if(index.indexOf(day[curr].id) == -1)
+					{
+						index.push(day[curr].id);
+						people.push(day[curr]);
+					}
+					else
+					{
+						people[index.indexOf(day[curr].id)] = day[curr];
+					}
+				}
+				else
+					break;
+			}
+		}
+		//参数1是day的数据，二是当前的时间
+		//时间减少时的函数
+		function getTimeDe(day, time) {
+			var result=[], indexs = [];
+			for (var i = 0; i < day.length; i++) {
+				if(day[i].time<time)
+				{
+					if(indexs.indexOf(day[i].id) == -1)
+					{
+						indexs.push(day[i].id);
+						result.push(day[i]);
+					}
+					else
+					{
+						result[indexs.indexOf(day[i].id)] = day[i];
+					}
+				}
+				else
+				{
+					people = result;
+					index = indexs;
+					curr = i;
+					break;
+				}
+			}
+		}
+		function drawGrids(){//画出网格
+				var grids = svg.append("g")
+							.attr("class", "grids");
+				var grid = grids.selectAll(".grid")
+				   .data(tmpData)
+				   .enter().append("g")
+				   .attr("class", "grid");
+				
+				grid.append("line")
+				   .attr("x1", xScale)
+				   .attr("x2", xScale)
+				   .attr("y1", p)
+				   .attr("y2", xScale(16));
+
+				var grid = grids.selectAll(".grid2")
+				   .data(tmpData2)
+				   .enter().append("g")
+				   .attr("class", "grid2");
+				grid.append("line")
+				   .attr("y1", xScale)
+				   .attr("y2", xScale)
+				   .attr("x1", p)
+				   .attr("x2", width - p + 1);
+			} 	
+		function draws() {
+			svg.selectAll("rect")
+				.data(floor1)
+				.enter()
+				.append("rect")
+				.attr("x",function (d) {
+					return xScale(d.y)+gridSize/2-peopleSize/2;
+				})
+    			.attr("y",function (d) {
+    				return xScale(d.x)+gridSize/2-peopleSize/2;
+    			})		
+    			.attr("height",peopleSize)
+    			.attr("width",peopleSize)
+    			.attr("class", "people");
+		}
+	</script>
+</body>
+</html>
