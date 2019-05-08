@@ -12,7 +12,7 @@
 			}
 			.container{
 				width: 800px;
-				height: 600px;
+				height: 1000px;
 				position: absolute;
 				left: 50%;
 				top: 50%;
@@ -26,13 +26,17 @@
 			.people{
 				fill:red;
 			}
+			.grids2{
+				position: absolute;
+				top:500px;
+			}
 		</style>
 </head>
 <body>
 	<svg class="container"></svg>
 	<script type="text/javascript">
 		var width = 800,
-			height = 600,
+			height = 1000,
 			padding = 50,
 			svg,
 			day,//存储读取到的day的数据
@@ -47,6 +51,7 @@
 			peopleSize = 6,
 			floor1 = [],//第一层的所有人
 			floor2 = [];//第二层的所有人
+		var	grids1, grids2;
 
 		//days数据的转换函数
 		var rowConventerDay = function (d) {
@@ -63,7 +68,6 @@
 
 		d3.csv("day1.csv", rowConventerDay, function (dataday) {
 			day=dataday;
-			drawGrids();
 			var time = 48000;
 			getTimeIn(day, time);
 			for (var i = 0; i < people.length; i++) {
@@ -72,7 +76,10 @@
 				else
 					floor2.push(people[i]);
 			}
-			draws();
+			drawGrids(1);
+			draws(floor1);
+			drawGrids(2);
+			draws(floor2);
 		});
 
 		//整个读取的结构应该是d3.csv(传感器),在这之中根据需要d3.csv(days)
@@ -122,10 +129,12 @@
 				}
 			}
 		}
-		function drawGrids(){//画出网格
-				var grids = svg.append("g")
-							.attr("class", "grids");
-				var grid = grids.selectAll(".grid")
+		function drawGrids(i){//画出网格
+			if(i==1)
+			{
+				grids1 = svg.append("g")
+							.attr("class", "grids1");
+				var grid = grids1.selectAll(".grid")
 				   .data(tmpData)
 				   .enter().append("g")
 				   .attr("class", "grid");
@@ -136,7 +145,7 @@
 				   .attr("y1", p)
 				   .attr("y2", xScale(16));
 
-				var grid = grids.selectAll(".grid2")
+				var grid = grids1.selectAll(".grid2")
 				   .data(tmpData2)
 				   .enter().append("g")
 				   .attr("class", "grid2");
@@ -145,21 +154,78 @@
 				   .attr("y2", xScale)
 				   .attr("x1", p)
 				   .attr("x2", width - p + 1);
-			} 	
-		function draws() {
-			svg.selectAll("rect")
-				.data(floor1)
+			}
+			else
+			{
+				grids2 = svg.append("g")
+							.attr("class", "grids2");
+				var grid = grids2.selectAll(".grid")
+				   .data(tmpData)
+				   .enter().append("g")
+				   .attr("class", "grid");
+				
+				grid.append("line")
+				   .attr("x1", xScale)
+				   .attr("x2", xScale)
+				   .attr("y1", p+xScale(16))
+				   .attr("y2", p+xScale(32));
+
+				var grid = grids2.selectAll(".grid2")
+				   .data(tmpData2)
+				   .enter().append("g")
+				   .attr("class", "grid2");
+				var yScale= d3.scaleLinear().domain([0, 16]).range([p+xScale(16), p+xScale(32)])
+				grid.append("line")
+				   .attr("y1", yScale)
+				   .attr("y2", yScale)
+				   .attr("x1", p)
+				   .attr("x2", width - p + 1);
+			}	
+		}
+		function findX(x,floor){
+			return xScale(x)+gridSize/2-peopleSize/2;
+		}
+		function findY(y,floor){
+			if(floor == 1){
+				return xScale(y)+gridSize/2-peopleSize/2;
+			}
+			else{
+				return xScale(16)+xScale(y)+gridSize/2-peopleSize/2;
+			}
+		} 	
+		function draws(floor) {
+			if(floor[1].floor==1)
+			{
+				grids1.selectAll("rect")
+				.data(floor)
 				.enter()
 				.append("rect")
 				.attr("x",function (d) {
-					return xScale(d.y)+gridSize/2-peopleSize/2;
+					return findX(d.y,1);;
 				})
     			.attr("y",function (d) {
-    				return xScale(d.x)+gridSize/2-peopleSize/2;
+    				return findY(d.x,1);;
     			})		
     			.attr("height",peopleSize)
     			.attr("width",peopleSize)
     			.attr("class", "people");
+			}
+			else
+			{
+				grids2.selectAll("rect")
+				.data(floor)
+				.enter()
+				.append("rect")
+				.attr("x",function (d) {
+					return findX(d.y,2);
+				})
+    			.attr("y",function (d) {
+    				return findY(d.x,2);
+    			})		
+    			.attr("height",peopleSize)
+    			.attr("width",peopleSize)
+    			.attr("class", "people");
+			}
 		}
 	</script>
 </body>
