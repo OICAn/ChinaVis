@@ -208,6 +208,7 @@
 		} 	
 		function draws(floor) {
 			var base = 1;//量度，可改
+			var _dis = 2;//不能贴近边界，离一点距离
 			if(floor[1].floor==1)
 			{
 				grids1.selectAll("circle")
@@ -222,7 +223,7 @@
     			})
     			.attr("r",function (d) {
     				var temp = grid_SumOfPeople_floor1[d.x][d.y]/base;//从每层二维数组提取人数
-    				return (temp>gridSize/2)?(gridSize/2):(temp);//不大于格子宽度
+    				return (temp>gridSize/2-_dis)?(gridSize/2-_dis):(temp);//不大于格子宽度
     			})
     			.attr("class", "people");
 			}
@@ -241,7 +242,7 @@
     			})		
     			.attr("r",function (d) {
     				var temp = grid_SumOfPeople_floor2[d.x][d.y]/base;
-    				return (temp>gridSize/2)?(gridSize/2):(temp);
+    				return (temp>gridSize/2-_dis)?(gridSize/2-_dis):(temp);
     			})
     			.attr("class", "people");
 			}
