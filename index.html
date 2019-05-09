@@ -86,7 +86,7 @@
 			peopleSize = 5,
 			floor1 = [],//第一层的所有人
 			floor2 = [];//第二层的所有人
-		var	grids1, grids2, bfb, time_min=25200, time_max=68400, now_time, rScale1, rScale2;
+		var	grids1, grids2, bfb, time_min=25200, time_max=68400, now_time, old_time, rScale1, rScale2;
 		var son = $("#control");
 		var parent = $("#container");
 
@@ -119,8 +119,8 @@
 		//*******
 		d3.csv("day1.csv", rowConventerDay, function (dataday) {
 			day=dataday;
-			var time = 28000;
-			getTimeIn(day, time);
+			old_time = 25200;
+			getTimeIn(day, old_time);
 			for (var i = 0; i < people.length; i++) {
 				var X = people[i].x;
 				var Y = people[i].y;
@@ -262,9 +262,23 @@
 			{
 				if(floor[0].floor==1)
 				{
-					grids1.selectAll("circle")
-					.data(floor)
-					.enter()
+					var item = grids1.selectAll("circle")
+					.data(floor);
+
+					//update
+					item.attr("cx",function (d) {
+						return findX(d.y,1);;
+					})
+	    			.attr("cy",function (d) {
+	    				return findY(d.x,1);;
+	    			})
+	    			.attr("r",function (d) {
+	    				return rScale1(grid_SumOfPeople_floor1[d.x][d.y]);
+	    			})
+	    			.attr("class", "people");
+
+					//enter
+					item.enter()
 					.append("circle")
 					.attr("cx",function (d) {
 						return findX(d.y,1);;
@@ -276,13 +290,31 @@
 	    				return rScale1(grid_SumOfPeople_floor1[d.x][d.y]);
 	    			})
 	    			.attr("class", "people");
+
+	    			//exit
+	    			item.exit()
+	    				.remove();
 				}
 				else
 				{
 					//同上
-					grids2.selectAll("circle")
-					.data(floor)
-					.enter()
+					var item = grids2.selectAll("circle")
+					.data(floor);
+
+					//update
+					item.attr("cx",function (d) {
+						return findX(d.y,1);;
+					})
+	    			.attr("cy",function (d) {
+	    				return findY(d.x,1);;
+	    			})
+	    			.attr("r",function (d) {
+	    				return rScale1(grid_SumOfPeople_floor1[d.x][d.y]);
+	    			})
+	    			.attr("class", "people");
+
+					//enter
+					item.enter()
 					.append("circle")
 					.attr("cx",function (d) {
 						return findX(d.y,2);
@@ -294,7 +326,23 @@
 	    				return rScale2(grid_SumOfPeople_floor2[d.x][d.y]);
 	    			})
 	    			.attr("class", "people");
+
+	    			//exit
+	    			item.exit()
+	    				.remove();
 				}
+			}
+			else
+			{
+				grids1.selectAll("circle")
+					.data(floor)
+					.exit()
+					.remove();
+
+				grids2.selectAll("circle")
+					.data(floor)
+					.exit()
+					.remove();
 			}
 			
 		}
@@ -345,6 +393,68 @@
 		        //解绑定，这一步很必要，前面有解释
 		        $(document).unbind("mousemove", move);
 		        $(document).unbind("mouseup", stop);
+		        if(now_time>old_time)
+		        {
+		        	old_time = now_time;//更新old_time
+		        	getTimeIn(day, now_time);
+		        	floor1=[]; floor2=[];
+
+					for(var i = 0; i<17; i++){//重新初始化0
+						grid_SumOfPeople_floor1[i] = new Array();
+						grid_SumOfPeople_floor2[i] = new Array();
+						for(var j = 0; j<31; j++){
+							grid_SumOfPeople_floor1[i][j] = 0;
+							grid_SumOfPeople_floor2[i][j] = 0;
+						}
+					}
+		        	for (var i = 0; i < people.length; i++) {
+						var X = people[i].x;
+						var Y = people[i].y;
+						if(people[i].floor==1){
+							floor1.push(people[i]);
+							grid_SumOfPeople_floor1[X][Y]++;//二维数组对应++
+						}
+						else{
+							floor2.push(people[i]);
+							grid_SumOfPeople_floor2[X][Y]++;
+						}
+					}
+					rScale1.domain([leastOfFour(grid_SumOfPeople_floor1), largestOfFour(grid_SumOfPeople_floor1)]);
+					rScale2.domain([leastOfFour(grid_SumOfPeople_floor2), largestOfFour(grid_SumOfPeople_floor2)]);
+					draws(floor1);
+					draws(floor2);
+		        }
+		        else if(now_time<old_time)
+		        {
+		        	old_time = now_time;
+		        	getTimeDe(day, now_time);
+		        	floor1=[]; floor2=[];
+
+					for(var i = 0; i<17; i++){//重新初始化0
+						grid_SumOfPeople_floor1[i] = new Array();
+						grid_SumOfPeople_floor2[i] = new Array();
+						for(var j = 0; j<31; j++){
+							grid_SumOfPeople_floor1[i][j] = 0;
+							grid_SumOfPeople_floor2[i][j] = 0;
+						}
+					}
+		        	for (var i = 0; i < people.length; i++) {
+						var X = people[i].x;
+						var Y = people[i].y;
+						if(people[i].floor==1){
+							floor1.push(people[i]);
+							grid_SumOfPeople_floor1[X][Y]++;//二维数组对应++
+						}
+						else{
+							floor2.push(people[i]);
+							grid_SumOfPeople_floor2[X][Y]++;
+						}
+					}
+					rScale1.domain([leastOfFour(grid_SumOfPeople_floor1), largestOfFour(grid_SumOfPeople_floor1)]);
+					rScale2.domain([leastOfFour(grid_SumOfPeople_floor2), largestOfFour(grid_SumOfPeople_floor2)]);
+					draws(floor1);
+					draws(floor2);
+		        }
 		    }
 		}
 		function largestOfFour (arr) {
