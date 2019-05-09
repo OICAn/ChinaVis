@@ -11,7 +11,7 @@
 				padding: 0;
 				margin: 0;
 			}
-			.container{
+			.contain{
 				width: 800px;
 				height: 1000px;
 				position: absolute;
@@ -50,7 +50,7 @@
 			}
 			#control{
 				display: inline-block;
-				width: 10px;
+				width: 20px;
 				height: 28px;
 				background: rgb(128,128,128);
 				position: relative;
@@ -63,12 +63,12 @@
 </head>
 <body>
 	<div id="timeText">
-		0:0:0
+		7:0:0
 	</div>
 	<div id="container">
 		<div id="control"></div>
 	</div>
-	<svg class="container"></svg>
+	<svg class="contain"></svg>
 	<script type="text/javascript">
 		var width = 800,
 			height = 1000,
@@ -86,7 +86,7 @@
 			peopleSize = 5,
 			floor1 = [],//第一层的所有人
 			floor2 = [];//第二层的所有人
-		var	grids1, grids2, bfb, time_max=86400, now_time, rScale1, rScale2;
+		var	grids1, grids2, bfb, time_min=25200, time_max=68400, now_time, rScale1, rScale2;
 		var son = $("#control");
 		var parent = $("#container");
 
@@ -322,7 +322,7 @@
 		        }
 		    }
 		    function move(event) {
-		    	bfb = parseFloat(((obj1.offset().left-obj3.offset().left)/(obj3[0].offsetWidth - obj1[0].offsetWidth)).toFixed(2));
+		    	bfb = parseFloat(((obj1.offset().left-obj3.offset().left)/(obj3[0].offsetWidth - obj1[0].offsetWidth)));
 		        x = event.clientX - gapX;//用鼠标相对于屏幕的横向距离减去父元素相对于屏幕的横向距离
 				if(x < 0) {//限制obj1移出obj3左端
 				        x = 0;
@@ -335,7 +335,7 @@
 				obj1.css({
 				    "left": x + "px"
 				});
-				now_time = bfb*time_max;
+				now_time = parseInt(bfb*(time_max - time_min))+time_min;
 				d3.select("#timeText")
 					.text(function () {
 						return timeFormat(now_time);
