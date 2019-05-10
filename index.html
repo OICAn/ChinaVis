@@ -87,6 +87,7 @@
 			floor1 = [],//第一层的所有人
 			floor2 = [];//第二层的所有人
 		var	grids1, grids2, bfb, time_min=25200, time_max=68400, now_time, old_time, rScale1, rScale2;
+		var exits = [{x: 0, y: 19}, {x: 15, y: 5}, {x: 15, y: 15}, {x: 15, y: 17}];
 		var son = $("#control");
 		var parent = $("#container");
 
@@ -142,11 +143,19 @@
 			color();
 			drawGrids(1);
 			drawGrids(2);
-			draws(floor1);
-			draws(floor2);
+			draws(floor1, 1);
+			draws(floor2, 2);
 			drag(son, parent);
 		});
 
+		//写给exits数组的函数，用来判断某一坐标是否为出口坐标
+		function GetIndex(m,d) {
+			for (var i = 0; i < m.length; i++) {
+				if(m[i].x==d.x&&m[i].y==d.y)
+					return i;
+			}
+			return -1;
+		}
 		//整个读取的结构应该是d3.csv(传感器),在这之中根据需要d3.csv(days)
 		//参数1是day的数据，二是当前的时间
 		//时间递增时的函数，可以动态、快速确定结果
@@ -161,7 +170,16 @@
 					}
 					else
 					{
-						people[index.indexOf(day[curr].id)] = day[curr];
+						var term = {x: (day[curr].x), y: (day[curr].y)};//判断是否到达出口位置
+						if(GetIndex(exits, term)==-1)
+						{
+							people[index.indexOf(day[curr].id)] = day[curr];
+						}
+						else//到达出口位置，需要删去该元素
+						{
+							people.splice(index.indexOf(day[curr].id),1);
+							index.splice(index.indexOf(day[curr].id),1);
+						}
 					}
 				}
 				else
@@ -182,7 +200,16 @@
 					}
 					else
 					{
-						result[indexs.indexOf(day[i].id)] = day[i];
+						var term = {x: (day[i].x), y: (day[i].y)};//判断是否到达出口位置
+						if(GetIndex(exits, term)==-1)
+						{
+							result[indexs.indexOf(day[i].id)] = day[i];
+						}
+						else
+						{
+							result.splice(indexs.indexOf(day[i].id),1);
+							indexs.splice(indexs.indexOf(day[i].id),1);
+						}
 					}
 				}
 				else
@@ -258,10 +285,10 @@
 				return xScale(16)+xScale(y)+gridSize/2;
 			}
 		} 	
-		function draws(floor) {
+		function draws(floor, i) {
 			if(floor.length>0)
 			{
-				if(floor[0].floor==1)
+				if(i==1)
 				{
 					var item = grids1.selectAll("circle")
 					.data(floor);
@@ -296,7 +323,7 @@
 	    			item.exit()
 	    				.remove();
 				}
-				else if(floor[0].floor == 2)
+				else
 				{
 					//同上
 					var item = grids2.selectAll("circle")
@@ -335,15 +362,20 @@
 			}
 			else
 			{
-				grids1.selectAll("circle")
+				if(i==1)
+				{
+					grids1.selectAll("circle")
 					.data(floor)
 					.exit()
 					.remove();
-
-				grids2.selectAll("circle")
+				}
+				else
+				{
+					grids2.selectAll("circle")
 					.data(floor)
 					.exit()
 					.remove();
+				}
 			}
 			
 		}
@@ -420,8 +452,8 @@
 					}
 					rScale1.domain([leastOfFour(grid_SumOfPeople_floor1), largestOfFour(grid_SumOfPeople_floor1)]);
 					rScale2.domain([leastOfFour(grid_SumOfPeople_floor2), largestOfFour(grid_SumOfPeople_floor2)]);
-					draws(floor1);
-					draws(floor2);
+					draws(floor1, 1);
+					draws(floor2, 2);
 		        }
 		        else if(now_time<old_time)
 		        {
@@ -449,8 +481,8 @@
 					}
 					rScale1.domain([leastOfFour(grid_SumOfPeople_floor1), largestOfFour(grid_SumOfPeople_floor1)]);
 					rScale2.domain([leastOfFour(grid_SumOfPeople_floor2), largestOfFour(grid_SumOfPeople_floor2)]);
-					draws(floor1);
-					draws(floor2);
+					draws(floor1, 1);
+					draws(floor2, 2);
 		        }
 		    }
 		}
