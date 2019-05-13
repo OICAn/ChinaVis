@@ -21,9 +21,6 @@
 				margin-top: -300px;
 				
 			}
-			.grid,.grid2{
-				stroke: #222;
-			}
 			.people{
 				fill:red;
 			}
@@ -59,9 +56,42 @@
 				top: 0;
 				margin-top:-4px; 
 			}
+			.ggrid{
+				stroke: gray;
+				stroke-width: 2;
+			}
+			#tooltip {
+				position: absolute;
+				width: 200px;
+				height: auto;
+				padding: 10px;
+				background-color: white;
+				-webkit-border-radius: 10px;
+				-moz-border-radius: 10px;
+				border-radius: 10px;
+				-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+				pointer-events: none;
+				z-index: 999;
+			}
+			
+			#tooltip.hidden {
+				display: none;
+			}
+			
+			#tooltip p {
+				margin: 0;
+				font-family: sans-serif;
+				font-size: 16px;
+				line-height: 20px;
+			}
 		</style>
 </head>
 <body>
+	<div id="tooltip" class="hidden">
+			<p id="value"><strong>100</strong></p>
+	</div>
 	<div id="timeText">
 		7:0:0
 	</div>
@@ -86,7 +116,7 @@
 			peopleSize = 5,
 			floor1 = [],//第一层的所有人
 			floor2 = [];//第二层的所有人
-		var	grids1, grids2, bfb, time_min=25200, time_max=68400, now_time, old_time, rScale1, rScale2;
+		var	grids1, grids2, bfb, time_min=25200, time_max=68400, now_time, old_time, rScale1, rScale2, area;
 		var exits = [{x: 0, y: 19}, {x: 15, y: 5}, {x: 15, y: 15}, {x: 15, y: 17}];
 		var son = $("#control");
 		var parent = $("#container");
@@ -140,9 +170,7 @@
 			rScale2 = d3.scaleLinear()
 						.domain([leastOfFour(grid_SumOfPeople_floor2), largestOfFour(grid_SumOfPeople_floor2)])
 						.range([3, (gridSize-3)/2]);
-			color();
-			drawGrids(1);
-			drawGrids(2);
+			drawGrids();
 			draws(floor1, 1);
 			draws(floor2, 2);
 			drag(son, parent);
@@ -219,59 +247,6 @@
 					curr = i;
 					break;
 				}
-			}
-		}
-		function drawGrids(i){//画出网格
-			if(i==1)
-			{
-				grids1 = svg.append("g")
-							.attr("class", "grids1");
-				var grid = grids1.selectAll(".grid")
-				   .data(tmpData)
-				   .enter().append("g")
-				   .attr("class", "grid");
-				
-				grid.append("line")
-				   .attr("x1", xScale)
-				   .attr("x2", xScale)
-				   .attr("y1", p)
-				   .attr("y2", xScale(16));
-
-				var grid = grids1.selectAll(".grid2")
-				   .data(tmpData2)
-				   .enter().append("g")
-				   .attr("class", "grid2");
-				grid.append("line")
-				   .attr("y1", xScale)
-				   .attr("y2", xScale)
-				   .attr("x1", p)
-				   .attr("x2", width - p + 1);
-			}
-			else
-			{
-				grids2 = svg.append("g")
-							.attr("class", "grids2");
-				var grid = grids2.selectAll(".grid")
-				   .data(tmpData)
-				   .enter().append("g")
-				   .attr("class", "grid");
-				
-				grid.append("line")
-				   .attr("x1", xScale)
-				   .attr("x2", xScale)
-				   .attr("y1", p+xScale(16))
-				   .attr("y2", p+xScale(32));
-
-				var grid = grids2.selectAll(".grid2")
-				   .data(tmpData2)
-				   .enter().append("g")
-				   .attr("class", "grid2");
-				var yScale= d3.scaleLinear().domain([0, 16]).range([p+xScale(16), p+xScale(32)])
-				grid.append("line")
-				   .attr("y1", yScale)
-				   .attr("y2", yScale)
-				   .attr("x1", p)
-				   .attr("x2", width - p + 1);
 			}
 		}
 		function findX(x,floor){
@@ -454,6 +429,60 @@
 					rScale2.domain([leastOfFour(grid_SumOfPeople_floor2), largestOfFour(grid_SumOfPeople_floor2)]);
 					draws(floor1, 1);
 					draws(floor2, 2);
+					grids1.selectAll(".ggrid")
+						.on("mousemove", function(d) {
+
+							//Get this bar's x/y values, then augment for the tooltip
+							var xPosition = event.screenX+5;
+							var yPosition = event.screenY-150;
+							var rect = this.parentNode;// the rectangle, parent of the title
+
+							//Update the tooltip position and value
+							d3.select("#tooltip")
+								.style("left", xPosition + "px")
+								.style("top", yPosition + "px")						
+								.select("#value")
+								.text(function () {
+									return grid_SumOfPeople_floor1[d.x][d.y];
+								});
+					   
+							//Show the tooltip
+							d3.select("#tooltip").classed("hidden", false);
+
+					   })
+					   .on("mouseout", function() {
+					   
+							//Hide the tooltip
+							d3.select("#tooltip").classed("hidden", true);
+							
+					   });
+					   grids2.selectAll(".ggrid")
+						.on("mousemove", function(d) {
+
+							//Get this bar's x/y values, then augment for the tooltip
+							var xPosition = event.screenX+5;
+							var yPosition = event.screenY-150;
+							var rect = this.parentNode;// the rectangle, parent of the title
+
+							//Update the tooltip position and value
+							d3.select("#tooltip")
+								.style("left", xPosition + "px")
+								.style("top", yPosition + "px")						
+								.select("#value")
+								.text(function () {
+									return grid_SumOfPeople_floor2[d.x][d.y];
+								});
+					   
+							//Show the tooltip
+							d3.select("#tooltip").classed("hidden", false);
+
+					   })
+					   .on("mouseout", function() {
+					   
+							//Hide the tooltip
+							d3.select("#tooltip").classed("hidden", true);
+							
+					   });
 		        }
 		        else if(now_time<old_time)
 		        {
@@ -483,6 +512,60 @@
 					rScale2.domain([leastOfFour(grid_SumOfPeople_floor2), largestOfFour(grid_SumOfPeople_floor2)]);
 					draws(floor1, 1);
 					draws(floor2, 2);
+					grids1.selectAll(".ggrid")
+						.on("mousemove", function(d) {
+
+							//Get this bar's x/y values, then augment for the tooltip
+							var xPosition = event.screenX+5;
+							var yPosition = event.screenY-150;
+							var rect = this.parentNode;// the rectangle, parent of the title
+
+							//Update the tooltip position and value
+							d3.select("#tooltip")
+								.style("left", xPosition + "px")
+								.style("top", yPosition + "px")						
+								.select("#value")
+								.text(function () {
+									return grid_SumOfPeople_floor1[d.x][d.y];
+								});
+					   
+							//Show the tooltip
+							d3.select("#tooltip").classed("hidden", false);
+
+					   })
+					   .on("mouseout", function() {
+					   
+							//Hide the tooltip
+							d3.select("#tooltip").classed("hidden", true);
+							
+					   });
+					   grids2.selectAll(".ggrid")
+						.on("mousemove", function(d) {
+
+							//Get this bar's x/y values, then augment for the tooltip
+							var xPosition = event.screenX+5;
+							var yPosition = event.screenY-150;
+							var rect = this.parentNode;// the rectangle, parent of the title
+
+							//Update the tooltip position and value
+							d3.select("#tooltip")
+								.style("left", xPosition + "px")
+								.style("top", yPosition + "px")						
+								.select("#value")
+								.text(function () {
+									return grid_SumOfPeople_floor2[d.x][d.y];
+								});
+					   
+							//Show the tooltip
+							d3.select("#tooltip").classed("hidden", false);
+
+					   })
+					   .on("mouseout", function() {
+					   
+							//Hide the tooltip
+							d3.select("#tooltip").classed("hidden", true);
+							
+					   });
 		        }
 		    }
 		}
@@ -497,273 +580,432 @@
 			});
 		}
 
-		//上色
-		function color() {
-			//#D4D4D4 无传感器区域
-		var wcgqx=[
-		0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20,21,22,23,24,25,26,27,28,29,
-		0,1,2,3,4,5,6,7,8,9,29,
-		0,12,13,14,29,
-		0,12,13,14,29,
-		0,12,13,14,29,
-		0,12,13,14,29,
-		0,12,13,14,29,
-		0,12,13,14,29,
-		0,12,13,14,29,
-		0,12,13,14,29,
-		0,1,2,3,4,5,12,13,14,29,
-		0,1,2,3,4,5,12,13,14,29,
-		0,29,
-		29,
-		0,29,
-		0,1,3,6,8,9,10,11,12,13,14,16,18,29
-		];
-		var wcgqy=[
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		1,1,1,1,1,1,1,1,1,1,1,
-		2,2,2,2,2,
-		3,3,3,3,3,
-		4,4,4,4,4,
-		5,5,5,5,5,
-		6,6,6,6,6,
-		7,7,7,7,7,
-		8,8,8,8,8,
-		9,9,9,9,9,
-		10,10,10,10,10,10,10,10,10,10,
-		11,11,11,11,11,11,11,11,11,11,
-		12,12,
-		13,
-		14,14,
-		15,15,15,15,15,15,15,15,15,15,15,15,15,15
-		];
-		var wcgqSize=119;
-		for(i=0;i<wcgqSize;i++){
-		var rect =svg.append("rect")
-			.attr("x",p+wcgqx[i]*gridSize)
-			.attr("y",p+wcgqy[i]*gridSize)
-			.attr("width",gridSize)
-			.attr("height",gridSize)
-			.attr("fill","#D4D4D4")
+		function drawGrids() {
+			//一楼所有元素
+			grids1 = svg.append("g")
+							.attr("class", "grids1");
+			//一楼灰色区域
+			var grayArea1 = grids1.append("g")
+							.attr("class", "grayArea1");
+			//扶梯
+			var futiArea1 = grids1.append("g")
+							.attr("class", "futiArea1");
+			//各大分会场
+			var confA = grids1.append("g")
+							.attr("class", "confA");
+			var confB = grids1.append("g")
+							.attr("class", "confB");
+			var confC = grids1.append("g")
+							.attr("class", "confC");
+			var confD = grids1.append("g")
+							.attr("class", "confD");
+			//签到处
+			var signIn = grids1.append("g")
+							.attr("class", "signIn");
+			//海报区
+			var poster = grids1.append("g")
+							.attr("class", "poster");
+			//一楼厕所
+			var WC1 = grids1.append("g")
+							.attr("class", "WC1");
+			//服务台
+			var service = grids1.append("g")
+							.attr("class", "service");
+			//一楼room
+			var room1 = grids1.append("g")
+							.attr("class", "room1");
+			var room2 = grids1.append("g")
+							.attr("class", "room2");
+			var room3 = grids1.append("g")
+							.attr("class", "room3");
+			var room4 = grids1.append("g")
+							.attr("class", "room4");
+			//展厅
+			var display = grids1.append("g")
+							.attr("class", "display");
+			//主会场
+			var conf = grids1.append("g")
+							.attr("class", "conf");
+			//出入口
+			var exArea = grids1.append("g")
+							.attr("class", "exArea");
+			//白色区域
+			var whiteArea1 = grids1.append("g")
+							.attr("class", "whiteArea1");
+			//绘制一楼灰色区域##D4D4D4
+			var wcgqy=[
+			0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20,21,22,23,24,25,26,27,28,29,
+			0,1,2,3,4,5,6,7,8,9,29,
+			0,12,13,14,29,
+			0,12,13,14,29,
+			0,12,13,14,29,
+			0,12,13,14,29,
+			0,12,13,14,29,
+			0,12,13,14,29,
+			0,12,13,14,29,
+			0,12,13,14,29,
+			0,1,2,3,4,5,12,13,14,29,
+			0,1,2,3,4,5,12,13,14,29,
+			0,29,
+			29,
+			0,29,
+			0,1,3,6,8,9,10,11,12,13,14,16,18,29
+			];
+			var wcgqx=[
+			0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+			1,1,1,1,1,1,1,1,1,1,1,
+			2,2,2,2,2,
+			3,3,3,3,3,
+			4,4,4,4,4,
+			5,5,5,5,5,
+			6,6,6,6,6,
+			7,7,7,7,7,
+			8,8,8,8,8,
+			9,9,9,9,9,
+			10,10,10,10,10,10,10,10,10,10,
+			11,11,11,11,11,11,11,11,11,11,
+			12,12,
+			13,
+			14,14,
+			15,15,15,15,15,15,15,15,15,15,15,15,15,15
+			];
+			var currArea=[];
+			for (var i = 0; i < wcgqx.length; i++) {
+				currArea.push({x: (wcgqx[i]), y: (wcgqy[i])});
+			}
+			drawItem1(grayArea1, currArea, "#D4D4D4");
+			//##000000 扶梯
+			currArea=[];
+			var futiy=[10,11,10,11];
+			var futix=[1,1,14,14];
+			for (var i = 0; i < futix.length; i++) {
+				currArea.push({x: (futix[i]), y: (futiy[i])});
+			}
+			drawItem1(futiArea1, currArea, "#000000");
+			//##EEEED1 分会场A
+			currArea=[];
+			for (var i = 2; i < 4; i++) {
+				for (var j = 1; j <6 ; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem1(confA, currArea, "#EEEED1");
+			//##EEE8AA 分会场B
+			for (var i = 0; i < currArea.length; i++) {
+				currArea[i].x+=2;
+			}
+			drawItem1(confB, currArea, "#EEE8AA");
+			//##EEE685 分会场C
+			for (var i = 0; i < currArea.length; i++) {
+				currArea[i].x+=2;
+			}
+			drawItem1(confC, currArea, "#EEE685")
+			//##EEEE00 分会场D
+			for (var i = 0; i < currArea.length; i++) {
+				currArea[i].x+=2;
+			}
+			drawItem1(confD, currArea, "#EEEE00");
+			//##A52A2A 签到
+			currArea=[];
+			for (var i = 12; i < 14; i++) {
+				for (var j = 2; j < 6; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem1(signIn, currArea, "#A52A2A")
+			//海报#E0FFFF
+			currArea=[];
+			for (var i = 3; i < 11; i++) {
+				for (var j = 7; j < 9; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem1(poster, currArea, "#E0FFFF");
+			//##CAFF10 展厅
+			currArea=[];
+			for (var i = 2; i < 12; i++) {
+				for (var j = 15; j < 19; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem1(display, currArea, "#CAFF10");
+			//##B4EEB4 主会场
+			currArea=[];
+			for (var i = 2; i < 12; i++) {
+				for (var j = 19; j < 29; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem1(conf, currArea, "#B4EEB4");
+			//##43CD80 服务台
+			currArea=[];
+			for (var i = 14; i < 16; i++) {
+				for (var j = 19; j < 21; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem1(service, currArea, "#43CD80");
+			//##A0522D 厕所
+			currArea=[];
+			for (var i = 4; i < 6; i++) {
+				for (var j = 10; j < 12; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			for (var i = 14; i < 16; i++) {
+				for (var j = 27; j < 29; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem1(WC1, currArea, "#A0522D");
+			//##EEE0E5 room1
+			currArea=[];
+			for (var i = 6; i < 10; i++) {
+				for (var j = 10; j < 12; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem1(room1, currArea, "#EEE0E5");
+			//##EED5D2 room2
+			currArea=[];
+			for (var i = 10; i < 12; i++) {
+				for (var j = 10; j < 12; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem1(room2, currArea, "#EED5D2");
+			//##EEE0E5 room3
+			currArea=[];
+			for (var i = 14; i < 16; i++) {
+				for (var j = 21; j < 25; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem1(room3, currArea, "#EEE0E5");
+			//##EED5D2 room4
+			currArea=[];
+			for (var i = 14; i < 16; i++) {
+				for (var j = 25; j < 27; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem1(room4, currArea, "#EED5D2");
+			//##00FA9A 出入口
+			currArea=[];
+			var cry=[0 ,2 , 4, 5, 7,15,17,19];
+			var crx=[13,15,15,15,15,15,15,0 ];
+			for (var i = 0; i < crx.length; i++) {
+				currArea.push({x: (crx[i]), y: (cry[i])});
+			}
+			drawItem1(exArea, currArea, "#00FA9A");
+			//白色区域FFFFFF
+			currArea=[];
+			for (var i = 12; i < 29; i++) {
+				currArea.push({x: 1, y: i});
+			}
+			for (var i = 2; i < 15; i++) {
+				currArea.push({x: i, y: 6});
+			}
+			for (var i = 7; i < 9; i++) {
+				currArea.push({x: 2, y: i});
+			}
+			for (var i = 2; i < 15; i++) {
+				currArea.push({x: i, y: 9});
+			}
+			for (var i = 2; i < 4; i++) {
+				for (var j = 10; j < 12; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			for (var i = 12; i < 15; i++) {
+				currArea.push({x: i, y: 1});
+			}
+			for (var i = 2; i < 6; i++) {
+				currArea.push({x: 14, y: i});
+			}
+			for (var i = 11; i < 15; i++) {
+				for (var j = 7; j < 9; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			for (var i = 12; i < 14; i++) {
+				for (var j = 10; j < 29; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			for (var i = 12; i < 19; i++) {
+				currArea.push({x: 14, y: i});
+			}
+			drawItem1(whiteArea1, currArea, "#FFFFFF")
+
+			currArea=[];
+
+			//画二楼了
+			//二楼所有元素
+			grids2 = svg.append("g")
+							.attr("class", "grids2");
+			//灰色区域
+			var grayArea2 = grids2.append("g")
+							.attr("class", "grayArea2");
+			//扶梯
+			var futiArea2 = grids2.append("g")
+							.attr("class", "futiArea2");
+			//room区域
+			var room2 = grids2.append("g")
+							.attr("class", "room2");
+			//食堂
+			var canteen = grids2.append("g")
+							.attr("class", "canteen");
+			//休闲区
+			var relaxation = grids2.append("g")
+							.attr("class", "relaxation");
+			//厕所
+			var WC2 = grids2.append("g")
+							.attr("class", "WC2");
+			//白色区域
+			var whiteArea2 = grids2.append("g")
+							.attr("class", "whiteArea2");
+
+			//二楼灰色区域绘制 ##D4D4D4
+			var wcgqy2=[
+			0,1,2,3,4,5,6,7,8,9,10,11,
+			0,1,2,3,4,5,6,7,8,9,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,
+			0,10,11,
+			0,10,11,
+			0,10,11,
+			0,10,11,
+			0,1,2,3,4,5,
+			6,7,8,9,10,11
+			];
+			var wcgqx2=[
+			0,0,0,0,0,0,0,0,0,0,0,0,
+			1,1,1,1,1,1,1,1,1,1,
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,8,8,
+			9,9,9,
+			10,10,10,
+			11,11,11,
+			12,12,12,12,12,12,
+			15,15,15,15,15,15
+			];
+			for (var i = 0; i < wcgqx2.length; i++) {
+				currArea.push({x: (wcgqx2[i]), y: (wcgqy2[i])});
+			}
+			for (var i = 0; i < 16; i++) {
+				for (var j = 12; j < 30; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem2(grayArea2, currArea, "#D4D4D4");
+			currArea=[];
+			//##000000 扶梯
+			var futiy=[10,11,10,11];
+			var futix=[1,1,14,14];
+			for (var i = 0; i < futix.length; i++) {
+				currArea.push({x: (futix[i]), y: (futiy[i])});
+			}
+			drawItem2(futiArea2, currArea, "#000000");
+			currArea=[];
+			//##EEE0E5 room2
+			for (var i = 10; i < 12; i++) {
+				for (var j = 1; j < 6; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			for (var i = 6; i < 8; i++) {
+				for (var j = 10; j < 12; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem2(room2, currArea, "#EEE0E5");
+			currArea=[];
+			//##90EE90 餐厅
+			for (var i = 2; i < 10; i++) {
+				for (var j = 1; j < 6; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem2(canteen, currArea, "#90EE90");
+			currArea=[];
+			//##D15FEE 休闲区
+			for (var i = 13; i < 16; i++) {
+				for (var j = 0; j < 6; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem2(relaxation, currArea, "#D15FEE");
+			currArea=[];
+			//##A0522D 厕所
+			for (var i = 4; i < 6; i++) {
+				for (var j = 10; j < 12; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem2(WC2, currArea, "#D15FEE");
+			//##白色区域FFFFFF
+			currArea=[];
+			for (var i = 2; i < 15; i++) {
+				for (var j = 6; j < 10; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			for (var i = 2; i < 4; i++) {
+				for (var j = 10; j < 12; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			for (var i = 12; i < 14; i++) {
+				for (var j = 10; j < 12; j++) {
+					currArea.push({x: i, y: j});
+				}
+			}
+			drawItem2(whiteArea2, currArea, "#FFFFFF");
+			currArea=[];
 		}
-		
-		//##D4D4D4 无传感器区域-floor2
-		var wcgqx2=[
-		0,1,2,3,4,5,6,7,8,9,10,11,
-		0,1,2,3,4,5,6,7,8,9,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,10,11,
-		0,10,11,
-		0,10,11,
-		0,10,11,
-		0,1,2,3,4,5,
-		6,7,8,9,10,11
-		];
-		var wcgqy2=[
-		0,0,0,0,0,0,0,0,0,0,0,0,
-		1,1,1,1,1,1,1,1,1,1,
-		2,
-		3,
-		4,
-		5,
-		6,
-		7,
-		8,8,8,
-		9,9,9,
-		10,10,10,
-		11,11,11,
-		12,12,12,12,12,12,
-		15,15,15,15,15,15
-		
-		];
-		var wcgqSize2=52;
-		for(i=0;i<wcgqSize2;i++){
-		var rect =svg.append("rect")
-			.attr("x",p+wcgqx2[i]*gridSize)
-			.attr("y",464+wcgqy2[i]*gridSize)
-			.attr("width",gridSize)
-			.attr("height",gridSize)
-			.attr("fill","#D4D4D4")
-		}
-	    var rect =svg.append("rect")
-			.attr("x",p+12*gridSize)
-			.attr("y",464+0*gridSize)
-			.attr("width",gridSize*18)
-			.attr("height",gridSize*16)
-			.attr("fill","#D4D4D4")
-		//##000000 扶梯
-		var futix=[10,11,10,11];
-		var futiy=[1,1,14,14];
-		var futiSize=4;
-		for(i=0;i<futiSize;i++){
-		var rect =svg.append("rect")
-			.attr("x",p+futix[i]*gridSize)
-			.attr("y",p+futiy[i]*gridSize)
-			.attr("width",gridSize)
-			.attr("height",gridSize)
-			.attr("fill","#000000")
-		var rect =svg.append("rect")
-			.attr("x",p+futix[i]*gridSize)
-			.attr("y",464+futiy[i]*gridSize)
-			.attr("width",gridSize)
-			.attr("height",gridSize)
-			.attr("fill","#000000")
-		}
-		//##EEEED1 分会场A
-	    var rect =svg.append("rect")
-			.attr("x",p+1*gridSize)
-			.attr("y",p+2*gridSize)
-			.attr("width",5*gridSize)
-			.attr("height",2*gridSize)
-			.attr("fill","#EEEED1")
-		//##EEE8AA 分会场B
-	    var rect =svg.append("rect")
-			.attr("x",p+1*gridSize)
-			.attr("y",p+4*gridSize)
-			.attr("width",5*gridSize)
-			.attr("height",2*gridSize)
-			.attr("fill","#EEE8AA")	
-		//##EEE685 分会场C
-		var rect =svg.append("rect")
-			.attr("x",p+1*gridSize)
-			.attr("y",p+6*gridSize)
-			.attr("width",5*gridSize)
-			.attr("height",2*gridSize)
-			.attr("fill","#EEE685")	
-		//##EEEE00 分会场D
-		var rect =svg.append("rect")
-			.attr("x",p+1*gridSize)
-			.attr("y",p+8*gridSize)
-			.attr("width",5*gridSize)
-			.attr("height",2*gridSize)
-			.attr("fill","#EEEE00")	
-		//##A52A2A 签到
-		var rect =svg.append("rect")
-			.attr("x",p+2*gridSize)
-			.attr("y",p+12*gridSize)
-			.attr("width",4*gridSize)
-			.attr("height",2*gridSize)
-			.attr("fill","#A52A2A")	
-		//##E0FFFF 海报
-		var rect =svg.append("rect")
-			.attr("x",p+7*gridSize)
-			.attr("y",p+3*gridSize)
-			.attr("width",2*gridSize)
-			.attr("height",8*gridSize)
-			.attr("fill","#E0FFFF")	
-		//##A0522D 厕所
-		var rect =svg.append("rect")
-			.attr("x",p+10*gridSize)
-			.attr("y",p+4*gridSize)
-			.attr("width",2*gridSize)
-			.attr("height",2*gridSize)
-			.attr("fill","#A0522D")	
-		var rect =svg.append("rect")
-			.attr("x",p+27*gridSize)
-			.attr("y",p+14*gridSize)
-			.attr("width",2*gridSize)
-			.attr("height",2*gridSize)
-			.attr("fill","#A0522D")	
-		var rect =svg.append("rect")
-			.attr("x",p+10*gridSize)
-			.attr("y",465+4*gridSize)
-			.attr("width",2*gridSize)
-			.attr("height",2*gridSize)
-			.attr("fill","#A0522D")	
-		//##43CD80 服务台
-		var rect =svg.append("rect")
-			.attr("x",p+19*gridSize)
-			.attr("y",p+14*gridSize)
-			.attr("width",2*gridSize)
-			.attr("height",2*gridSize)
-			.attr("fill","#43CD80")	
-		//##EEE0E5 room1
-		var rect =svg.append("rect")
-			.attr("x",p+10*gridSize)
-			.attr("y",p+6*gridSize)
-			.attr("width",2*gridSize)
-			.attr("height",4*gridSize)
-			.attr("fill","#EEE0E5")	
-		//##EED5D2 room2
-		var rect =svg.append("rect")
-			.attr("x",p+10*gridSize)
-			.attr("y",p+10*gridSize)
-			.attr("width",2*gridSize)
-			.attr("height",2*gridSize)
-			.attr("fill","#EED5D2")	
-		//##EEE0E5 room3
-		var rect =svg.append("rect")
-			.attr("x",p+21*gridSize)
-			.attr("y",p+14*gridSize)
-			.attr("width",4*gridSize)
-			.attr("height",2*gridSize)
-			.attr("fill","#EEE0E5")
-		//##EED5D2 room4
-		var rect =svg.append("rect")
-			.attr("x",p+25*gridSize)
-			.attr("y",p+14*gridSize)
-			.attr("width",2*gridSize)
-			.attr("height",2*gridSize)
-			.attr("fill","#EED5D2")
-		//##CAFF10 展厅
-		var rect =svg.append("rect")
-			.attr("x",p+15*gridSize)
-			.attr("y",p+2*gridSize)
-			.attr("width",4*gridSize)
-			.attr("height",10*gridSize)
-			.attr("fill","#CAFF10")
-		//##B4EEB4 主会场
-		var rect =svg.append("rect")
-			.attr("x",p+19*gridSize)
-			.attr("y",p+2*gridSize)
-			.attr("width",10*gridSize)
-			.attr("height",10*gridSize)
-			.attr("fill","#B4EEB4")
-		//##90EE90 餐厅
-		var rect =svg.append("rect")
-			.attr("x",p+1*gridSize)
-			.attr("y",465+2*gridSize)
-			.attr("width",5*gridSize)
-			.attr("height",8*gridSize)
-			.attr("fill","#90EE90")	
-		//##EEE0E5 room5
-		var rect =svg.append("rect")
-			.attr("x",p+1*gridSize)
-			.attr("y",465+10*gridSize)
-			.attr("width",5*gridSize)
-			.attr("height",2*gridSize)
-			.attr("fill","#EEE0E5")	
-		//##EEE0E5 room6
-		var rect =svg.append("rect")
-			.attr("x",p+10*gridSize)
-			.attr("y",465+6*gridSize)
-			.attr("width",2*gridSize)
-			.attr("height",2*gridSize)
-			.attr("fill","#EEE0E5")	
-		//##D15FEE 休闲区
-		var rect =svg.append("rect")
-			.attr("x",p+0*gridSize)
-			.attr("y",465+13*gridSize)
-			.attr("width",6*gridSize)
-			.attr("height",3*gridSize)
-			.attr("fill","#D15FEE")	
-		//##00FA9A 出入口
-		var crx=[0 ,2 , 4, 5, 7,15,17,19];
-		var cry=[13,15,15,15,15,15,15,0 ];
-		var futiSize=8;
-		for(i=0;i<futiSize;i++){
-		var rect =svg.append("rect")
-			.attr("x",p+crx[i]*gridSize)
-			.attr("y",p+cry[i]*gridSize)
-			.attr("width",gridSize)
-			.attr("height",gridSize)
-			.attr("fill","#00FA9A")
-	}
-		}
+
+			function drawItem1(item, data, color) {
+				item.selectAll("rect")
+					.data(data)
+					.enter()
+					.append("rect")
+					.attr("x", function (d) {
+						return xScale(d.y);
+					})
+					.attr("y", function (d) {
+						return xScale(d.x);
+					})
+					.attr("width", gridSize)
+					.attr("height", gridSize)
+					.attr("fill", color)
+					.attr("class", "ggrid");
+				}
+			function drawItem2(item, data, color) {
+				item.selectAll("rect")
+					.data(data)
+					.enter()
+					.append("rect")
+					.attr("x", function (d) {
+						return xScale(d.y);
+					})
+					.attr("y", function (d) {
+						return xScale(d.x)+xScale(16);
+					})
+					.attr("width", gridSize)
+					.attr("height", gridSize)
+					.attr("fill", color)
+					.attr("class", "ggrid");
+				}
 	</script>
 </body>
 </html>
