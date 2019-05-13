@@ -24,10 +24,6 @@
 			.people{
 				fill:red;
 			}
-			.grids2{
-				position: absolute;
-				top:500px;
-			}
 			#timeText {
 				width: 100px;
 				position: absolute;
@@ -435,8 +431,6 @@
 							//Get this bar's x/y values, then augment for the tooltip
 							var xPosition = event.screenX+5;
 							var yPosition = event.screenY-150;
-							var rect = this.parentNode;// the rectangle, parent of the title
-
 							//Update the tooltip position and value
 							d3.select("#tooltip")
 								.style("left", xPosition + "px")
@@ -462,7 +456,6 @@
 							//Get this bar's x/y values, then augment for the tooltip
 							var xPosition = event.screenX+5;
 							var yPosition = event.screenY-150;
-							var rect = this.parentNode;// the rectangle, parent of the title
 
 							//Update the tooltip position and value
 							d3.select("#tooltip")
@@ -518,7 +511,6 @@
 							//Get this bar's x/y values, then augment for the tooltip
 							var xPosition = event.screenX+5;
 							var yPosition = event.screenY-150;
-							var rect = this.parentNode;// the rectangle, parent of the title
 
 							//Update the tooltip position and value
 							d3.select("#tooltip")
@@ -545,7 +537,6 @@
 							//Get this bar's x/y values, then augment for the tooltip
 							var xPosition = event.screenX+5;
 							var yPosition = event.screenY-150;
-							var rect = this.parentNode;// the rectangle, parent of the title
 
 							//Update the tooltip position and value
 							d3.select("#tooltip")
@@ -691,18 +682,27 @@
 			}
 			drawItem1(confA, currArea, "#EEEED1");
 			//##EEE8AA 分会场B
-			for (var i = 0; i < currArea.length; i++) {
-				currArea[i].x+=2;
+			currArea=[];
+			for (var i = 4; i < 6; i++) {
+				for (var j = 1; j <6 ; j++) {
+					currArea.push({x: i, y: j});
+				}
 			}
 			drawItem1(confB, currArea, "#EEE8AA");
 			//##EEE685 分会场C
-			for (var i = 0; i < currArea.length; i++) {
-				currArea[i].x+=2;
+			currArea=[];
+			for (var i = 6; i < 8; i++) {
+				for (var j = 1; j <6 ; j++) {
+					currArea.push({x: i, y: j});
+				}
 			}
 			drawItem1(confC, currArea, "#EEE685")
 			//##EEEE00 分会场D
-			for (var i = 0; i < currArea.length; i++) {
-				currArea[i].x+=2;
+			currArea=[];
+			for (var i = 8; i < 10; i++) {
+				for (var j = 1; j <6 ; j++) {
+					currArea.push({x: i, y: j});
+				}
 			}
 			drawItem1(confD, currArea, "#EEEE00");
 			//##A52A2A 签到
