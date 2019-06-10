@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+   <head>
+       <meta charset="utf-8">
+   </head>
+   <body style="height: 100%; margin: 0">
+       <div id="container" style="height: 100%"></div>
+	   <script type="text/javascript" src="d3.v4.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/echarts.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts-gl/echarts-gl.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts-stat/ecStat.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/extension/dataTool.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/china.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/world.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/extension/bmap.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/simplex.js"></script>
+	   
+       <script type="text/javascript">
+	   
+	    var day;//存储读取到的day的数据
+	    var dom = document.getElementById("container");
+		var myChart = echarts.init(dom);
+		var app = {};
+		option = true;
+		var x = ['1', '2', '3', '4', '5', '6', '7','8', '9', '10','11','12','13', '14', '15', '16', '17','18','19', '20', '21', '22', '23', '24','25','26','27','28','29','30','31','32'];
+		
+
+
+		//days数据的转换函数
+		var rowConventerDay = function (d) {
+			return {
+				id: parseInt(d.id),
+				time: parseInt(d.time),
+				x: (d.floor=="1" ? parseInt(d.x) : parseInt(d.x)+16),
+				y: parseInt(d.y)
+			};
+		}
+		var sampleId1=[17380,13906,19010,15587,15966,15139,13619,17512,17576,14819,13348,15438,16270,19143,13982];
+		var sampleId2=[12573,11877,11586,11596,19829,12917,15807,11378,10164,12970,13616,19300,17371,15655,13431,13485,17786,19539,14598];
+		var sampleId3=[13231,10374,15112,10121,10117,14231,11868,15408,10460,13982,11551,15324,19574,13121,12998];
+		var samplePath=[];
+		var data = samplePath[0];
+		var data2 =samplePath[1];
+
+		d3.csv("day1.csv", rowConventerDay, function (data) {
+			day=data;
+			for (var i = 0; i < sampleId1.length; i++) {
+				samplePath.push([]);
+			}
+			for (var i = 0; i < day.length; i++) {
+				var index=sampleId1.indexOf(day[i].id)
+				if (index!=-1){
+					var tmp=[day[i].x, day[i].y, day[i].time]
+					samplePath[index].push(tmp);
+				}
+			}
+			
+			option = {
+    tooltip: {},
+    backgroundColor: '#fff',
+	legend: {
+						x: 60,
+						y:30,
+            	        itemWidth: 20,
+            	        itemHeight: 20,
+						orient:'vertical',borderColor: 'rgba(178,34,34,0.8)',
+						textStyle:{
+                	color: 'blue',	
+                },},
+	
+				
+    xAxis3D: {
+        type: 'value'
+    },
+    yAxis3D: { 
+        type: 'value'
+    },
+    zAxis3D: {
+        type: 'value',
+		min: 'dataMin' 
+    },
+    grid3D: {
+        viewControl: {
+            projection: 'orthographic'
+        }
+    },
+    series: [
+	
+					{ 
+						name : '工作人员',
+						type : 'line3D',
+						lineStyle: {
+						width: 2
+						},
+						color:'rgb(191,62,255)',
+						data :samplePath[0]
+				
+					},
+					{ 
+						name : '工作人员',
+						type : 'line3D',
+						lineStyle: {
+						width: 2
+						},
+						color:'rgb(191,62,255)',
+						data : samplePath[1]
+					},
+					{ 
+						name : '参赛人员',
+						type : 'line3D',
+						lineStyle: {
+						width: 2
+						},
+						color:'rgb(255,106,106)',
+						data : samplePath[2]
+					},
+					{ 
+						name : '参赛人员',
+						type : 'line3D',
+						lineStyle: {
+						width: 2
+						},
+					color:'rgb(255,106,106)',
+						data : samplePath[3]
+					},
+					{ 
+						name : '参观人员',
+						type : 'line3D',
+						lineStyle: {
+						width: 2
+						},
+							color:'rgb(0,255,255)',
+						data : samplePath[4]
+					},
+					{ 
+						name : '工作人员',
+						type : 'line3D',
+						lineStyle: {
+						width: 2
+						},
+						color:'rgb(191,62,255)',
+						data : samplePath[5]
+					},
+					{ 
+						name : '参赛人员',
+						type : 'line3D',
+						lineStyle: {
+						width: 2
+						},
+						color:'rgb(255,106,106)',
+						data : samplePath[6]
+					},
+					{ 
+						name : '参观人员',
+						type : 'line3D',
+						lineStyle: {
+						width: 2
+						},
+							color:'rgb(0,255,255)',
+						data : samplePath[7]
+					},
+					{ 
+						name : '工作人员',
+						type : 'line3D',
+						lineStyle: {
+						width: 2
+						},
+						color:'rgb(191,62,255)',
+						data : samplePath[8]
+					},
+					{ 
+						name : '工作人员',
+						type : 'line3D',
+						lineStyle: {
+						width: 2
+						},
+						color:'rgb(191,62,255)',
+						data : samplePath[9]
+					},
+					{ 
+						name : '参赛人员',
+						type : 'line3D',
+						lineStyle: {
+						width: 2
+						},
+						color:'rgb(255,106,106)',
+						data : samplePath[10]
+					},
+					{ 
+						name : '工作人员',
+						type : 'line3D',
+						lineStyle: {
+						width: 2
+						},
+						color:'rgb(191,62,255)',
+						data : samplePath[11]
+					},
+					{ 
+						name : '参赛人员',
+						type : 'line3D',
+						lineStyle: {
+						width: 2
+						},
+						color:'rgb(255,106,106)',
+						data : samplePath[12]
+					},
+					{ 
+						name : '参赛人员',
+						type : 'line3D',
+						lineStyle: {
+						width: 2
+						},color:'rgb(255,106,106)',
+						data : samplePath[13]
+					},
+					{ 
+						name : '工作人员',
+						type : 'line3D',
+						lineStyle: {
+						width: 2
+						},
+						color:'rgb(191,62,255)',
+						data : samplePath[14]
+					},
+
+
+	
+//	{
+//        type: 'line3D',
+//        data: data,
+//        lineStyle: {
+//            width: 3
+//        }
+//    }
+//	
+	
+	]
+};
+
+if (option && typeof option === "object") {
+    myChart.setOption(option, true);
+}
+			
+		});
+	   
+
+
+
+
+       </script>
+   </body>
+</html>
